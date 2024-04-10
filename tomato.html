@@ -1,0 +1,417 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Study Timer</title>
+<style>
+ body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+  z-index: 2;
+  overflow: hidden;
+}
+#studyForm {
+  position: relative;
+  z-index: 10; /* Ensure the form appears above the blob */
+}
+
+#clock {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px;
+}
+
+.timer {
+  font-size: 2em;
+  z-index: 1;
+  color: black;
+}
+
+.blob {
+  width: 300px; /*Larghezza del div .blob*/
+  height: 300px; /*Altezza del div .blob*/
+  margin: 10% auto; /*Margini: 10% sopra e sotto, centrato orizzontalmente*/
+  position: relative; /*Posizionamento relativo: utilizzato per posizionare gli pseudo-elementi ::before e ::after rispetto a questo elemento*/
+  color: #fff; /*Colore del testo all'interno del div*/
+  display: flex; /*Display flex per centrare il contenuto (testo o altro) all'interno del div*/
+  justify-content: center; /* Allinea orizzontalmente il contenuto al centro */
+  align-items: center; /* Allinea verticalmente il contenuto al centro */
+  z-index: 0; /* Livello z-index, determina l'ordine di sovrapposizione degli elementi */
+}
+
+.blob::before {
+  content: ""; /* Necessario per rendere visibile lo pseudo-elemento, anche se non contiene testo */
+  border: 2px solid #fff; /* Bordo dello pseudo-elemento */
+  border-radius: 58% 42% 48% 53% / 47% 60% 36% 53%; /* Raggio del bordo per creare forme organiche/irregolari */
+  width: 100%; /* Larghezza: occupa tutto lo spazio disponibile nel contenitore .blob */
+  height: 100%; /* Altezza: occupa tutto lo spazio disponibile nel contenitore .blob */
+  position: absolute; /* Posizionamento assoluto: posizionato rispetto al primo antenato posizionato (in questo caso .blob) */
+  left: 0; /* Allineato a sinistra del contenitore .blob */
+  top: 0; /* Allineato in alto del contenitore .blob */
+  animation-fill-mode: forwards; /* Mantiene lo stile dell'ultimo frame dell'animazione dopo che è finita */
+}
+
+/*https://css-tricks.com/almanac/selectors/a/after-and-before/*/
+
+.blob::after {
+  content: ""; /* Analogamente a ::before, rende visibile lo pseudo-elemento */
+  border: 2px solid #fff; /* Bordo dello pseudo-elemento */
+  border-radius: 48% 42% 48% 53% / 47% 60% 36% 53%; /* Raggio del bordo per creare forme diverse rispetto a ::before */
+  width: 100%; /* Larghezza come ::before */
+  height: 100%; /* Altezza come ::before */
+  background: rgba(
+    244,
+    166,
+    166,
+    0.2
+  ); /* Sfondo leggermente trasparente per differenziarlo da ::before */
+  position: absolute; /* Posizionamento assoluto come ::before */
+  left: 0; /* Allineato a sinistra come ::before */
+  top: 0; /* Allineato in alto come ::before */
+  animation-fill-mode: forwards; /* Mantiene lo stile dell'ultimo frame dell'animazione come ::before */
+}
+
+.timer-section {
+  margin: 1px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+.StudyTime {
+  background-color: #fff;
+  border: 3px solid #800;
+  width: 70px;
+  height: 40px;
+  font-size: 1.5em;
+  border-radius: 25%;
+}
+
+.StudyTime:hover {
+  background-color: #800;
+  border: 3px solid #d00;
+  color: white;
+  cursor: pointer;
+}
+
+.StudyTime:active {
+  background-color: #000;
+}
+
+.RestTime {
+  background-color: #fff;
+  border: 3px solid #ee0;
+  width: 70px;
+  height: 40px;
+  font-size: 1.5em;
+  border-radius: 25%;
+}
+
+.RestTime:hover {
+  background-color: #660;
+  border: 3px solid #ff0;
+  color: white;
+  cursor: pointer;
+}
+
+.RestTime:active {
+  background-color: #000;
+}
+
+.Sessions {
+  background-color: #fff;
+  border: 3px solid #0e0;
+  width: 70px;
+  height: 40px;
+  font-size: 1.5em;
+  border-radius: 25%;
+}
+
+.Sessions:hover {
+  background-color: #060;
+  border: 3px solid #0f0;
+  color: white;
+  cursor: pointer;
+}
+
+.Sessions:active {
+  background-color: #000;
+}
+
+.hide {
+  display: none;
+}
+
+@keyframes contract {
+  0% {
+    transform: rotate(360 deg);
+    border-color: #ec0d0d;
+  }
+  50% {
+    transform: scale(3) rotate(360deg);
+    border-color: #ffff77;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    border-color: #ec0d0d;
+  }
+}
+
+@keyframes expand {
+  0% {
+    transform: scale(1) rotate(0deg);
+    border-color: #ec0d0d;
+  }
+  50% {
+    transform: scale(3) rotate(360deg);
+    border-color: #ffff77;
+  }
+  100% {
+    transform: scale(6) rotate(360deg);
+    border-color: #ec0d0d;
+  }
+}
+
+@keyframes finish {
+  0% {
+    transform: scale (7);
+    border-color: rgba(244, 166, 166, 1);
+  }
+  50% {
+    transform: scale(7.5);
+    border-color: rgba(244, 166, 166, 0.5);
+  }
+  100% {
+    transform: scale(8);
+    border-color: rgba(244, 166, 166, 0);
+  }
+}
+
+</style>
+</head>
+<body>
+ <label for="studyTime" id="label">Study Time</label>
+  <button onclick="increment()" id="upper">&and;</button>
+  <form id="studyForm">
+    <div id="clock" class="blob">
+      <div id="timer" <div class="timer-section">
+        <div id="value" class="timer"></div>
+      </div>
+      <div id="semicolon" class="timer">:</div>
+      <div class="timer-section">
+        <div id="sec" class="timer">00</div>
+      </div>
+    </div>
+  </form>
+  <button onclick="decrement()" id="lower">&or;</button>
+  <div class="continue">
+    <button id="submit">continue</button>
+  </div>
+  <script>
+  const up = document.getElementById("upper");
+const down = document.getElementById("lower");
+const go = document.getElementById("submit");
+const Title = document.getElementById("label");
+const seconds = document.getElementById("sec");
+const semicolon = document.getElementById("semicolon");
+const value = document.getElementById("value");
+const clock = document.getElementById("clock");
+
+let restTime = 0;
+let Studymin = 0;
+let restMin = 0;
+let phase = 0;
+let sessions = 1;
+let selection = 0;
+
+up.classList.add("StudyTime");
+down.classList.add("StudyTime");
+
+value.innerHTML = Studymin;
+
+function increment() {
+  if (selection == 0) {
+    if (Studymin == 0) {
+      Studymin = 1;
+    } else {
+      Studymin = Studymin + 1;
+    }
+    value.innerHTML = Studymin;
+  } else if (selection == 1) {
+    if (restMin < 5) {
+      restMin = restMin + 1;
+    }
+    value.innerHTML = restMin;
+  } else {
+    if (sessions < 10) {
+      sessions = sessions + 1;
+      value.innerHTML = sessions;
+    }
+  }
+}
+
+function decrement() {
+  if (selection == 0) {
+    if (Studymin == 5) {
+      Studymin = 0;
+    } else if (Studymin > 5) {
+      Studymin = Studymin - 1;
+    }
+    value.innerHTML = Studymin;
+  } else if (selection == 1) {
+    if (restMin > 0) {
+      restMin = restMin - 1;
+    }
+    value.innerHTML = restMin;
+  } else {
+    if (sessions > 1) {
+      sessions = sessions - 1;
+    }
+    value.innerHTML = sessions;
+  }
+}
+
+go.addEventListener("click", function () {
+  if (selection == 0) {
+    if (Studymin != 0) {
+      Title.innerHTML = "Rest Time";
+
+      up.classList.remove("StudyTime");
+      up.classList.add("RestTime");
+
+      down.classList.remove("StudyTime");
+      down.classList.add("RestTime");
+      selection = selection + 1;
+
+      value.innerHTML = restMin;
+    }
+  } else if (selection == 1) {
+    if (restMin != 0) {
+      Title.innerHTML = "Session Numer";
+
+      semicolon.classList.add("hide");
+      seconds.classList.add("hide");
+
+      up.classList.remove("RestTime");
+      up.classList.add("Sessions");
+
+      down.classList.remove("RestTime");
+      down.classList.add("Sessions");
+      selection = selection + 1;
+      value.innerHTML = sessions;
+    }
+  } else if (selection == 2) {
+    Title.classList.add("hide");
+
+    up.classList.remove("Sessions");
+    up.classList.add("hide");
+
+    down.classList.remove("Sessions");
+    down.classList.add("hide");
+
+    go.classList.add("hide");
+
+    semicolon.classList.remove("hide");
+    seconds.classList.remove("hide");
+    selection = selection + 1;
+
+    let phases = 0;
+    let endRelaxTimer = 0;
+    let counts = 0;
+    const expansionDuration = Studymin * 60;
+    const contractionDuration = restMin * 60;
+    const contract = document.createElement("style");
+    contract.innerText = `
+          .blob::before, .blob::after {
+            transform:scale(6);
+            animation: contract ${contractionDuration}s linear forwards;
+          }
+          `;
+
+    const expand = document.createElement("style");
+    expand.innerText = `
+          .blob::before, .blob::after {
+            animation: expand ${expansionDuration}s linear forwards;
+          }
+          `;
+
+    const finish = document.createElement("style");
+    finish.innerText = `
+          .blob::before, .blob::after {
+            transform:scale(6);
+            animation: finish 3s linear forwards;
+          }
+          `;
+    document.head.appendChild(expand);
+    let endStudyTimer = Date.now() + Studymin * 60000;
+    const interval = setInterval(function () {
+      if (phase == 0) {
+        const now = Date.now();
+        const difference = endStudyTimer - now;
+        if (difference <= 0) {
+          counts = counts + 1;
+          if (counts == sessions) {
+            phase = 2;
+            return;
+          }
+          endRelaxTimer = Date.now() + restMin * 60000;
+          phase = 1;
+          document.head.removeChild(expand);
+          document.head.appendChild(contract);
+          return;
+        }
+        const minutes = Math.floor(
+          (difference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const sec = Math.floor((difference % (1000 * 60)) / 1000);
+        value.innerHTML = minutes;
+        if (sec > 9) {
+          seconds.innerHTML = sec;
+        } else {
+          seconds.innerHTML = "0" + sec;
+        }
+      } else if (phase == 1) {
+        const now = Date.now();
+        const difference = endRelaxTimer - now;
+        if (difference <= 0) {
+          endStudyTimer = Date.now() + Studymin * 60000;
+          phase = 0;
+          document.head.removeChild(contract);
+          document.head.appendChild(expand);
+          return;
+        }
+        const minutes = Math.floor(
+          (difference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        const sec = Math.floor((difference % (1000 * 60)) / 1000);
+        value.innerHTML = minutes;
+        if (sec > 9) {
+          seconds.innerHTML = sec;
+        } else {
+          seconds.innerHTML = "0" + sec;
+        }
+      } else if (phase == 2) {
+        document.head.appendChild(finish);
+        const loader = document.createElement("h2");
+        loader.onclick = function () {
+          location.reload();
+        };
+        loader.innerText = `You finished your session`;
+        document.body.appendChild(loader);
+        clearInterval(interval);
+        return;
+      }
+    }, 1000);
+  }
+});
+  </script>
+  
+  </body>
+  </html>
